@@ -1,0 +1,33 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://postgres:5432/txdb
+      DB_USERNAME: txuser
+      DB_PASSWORD: txpass
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-ZGVtby1zZWNyZXQta2V5LWNoYW5nZS1tZS1pbi1wcm9kdWN0aW9uLWRlbW8tb25seS0wMTIzNDU2Nzg5YWJjZGVm}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: txdb
+      POSTGRES_USER: txuser
+      POSTGRES_PASSWORD: txpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U txuser -d txdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
